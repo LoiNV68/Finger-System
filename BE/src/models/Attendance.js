@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const attendanceSchema = new mongoose.Schema({
   student: {
@@ -7,7 +7,9 @@ const attendanceSchema = new mongoose.Schema({
     required: true,
   }, // Sinh viên điểm danh
   room: { type: mongoose.Schema.Types.ObjectId, ref: "Room", required: true }, // Phòng học
-  device: { type: mongoose.Schema.Types.ObjectId, ref: "Device" }, // Thiết bị vân tay
-  timestamp: { type: Date, default: Date.now }, // Thời gian điểm danh
+  checkInTime: { type: Date, default: Date.now }, // Thời gian vào
+  checkOutTime: { type: Date }, // Thời gian ra
 });
+
 module.exports = mongoose.model("Attendance", attendanceSchema);
+  

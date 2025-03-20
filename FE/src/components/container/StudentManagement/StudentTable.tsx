@@ -1,33 +1,30 @@
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import { Fingerprint, Edit, Trash } from "lucide-react";
-
-interface Student {
-    id: number;
-    name: string;
-    gender: string;
-    studentId: string;
-    class: string;
-    department: string;
-    fingerprintRegistered: boolean;
-    fingerprintId: string | null;
-}
+import { Student } from "./StudentMContainer";
 
 interface StudentTableProps {
     students: Student[];
     onEdit: (student: Student) => void;
-    onDelete: (studentId: number) => void;
-    onRegisterFingerprint: (studentId: number) => void;
+    onDelete: (student: Student) => void;
+    onRegisterFingerprint: (student: Student) => void;
 }
 
 export function StudentTable({
     students,
     onEdit,
     onDelete,
-    onRegisterFingerprint
+    onRegisterFingerprint,
 }: StudentTableProps) {
     return (
-        <Table style={{ padding: '0 5px' }}>
+        <Table style={{ padding: "0 5px" }}>
             <TableHeader>
                 <TableRow className="bg-gray-200">
                     <TableHead>STT</TableHead>
@@ -41,33 +38,41 @@ export function StudentTable({
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {students.map(student => (
-                    <TableRow key={student.id}>
-                        <TableCell>{student.id}</TableCell>
-                        <TableCell>{student.name}</TableCell>
-                        <TableCell>{student.gender}</TableCell>
-                        <TableCell>{student.studentId}</TableCell>
-                        <TableCell>{student.class}</TableCell>
-                        <TableCell>{student.department}</TableCell>
+                {students.map((student, index) => (
+                    <TableRow key={student._id || student.studentId || index}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{student.name || "N/A"}</TableCell>
+                        <TableCell>{student.gender || "N/A"}</TableCell>
+                        <TableCell>{student.studentId || "N/A"}</TableCell>
+                        <TableCell>{student.class || "N/A"}</TableCell>
+                        <TableCell>{student.department || "N/A"}</TableCell>
                         <TableCell>
-                            {student.fingerprintRegistered ? (
+                            {student.fingerprintTemplate ? (
                                 <span className="text-green-500 font-semibold">✅ Đã đăng ký</span>
                             ) : (
                                 <Button
-                                    style={{ padding: '12px' }}
+                                    style={{ padding: "12px" }}
                                     size="sm"
                                     className="bg-yellow-500 text-white"
-                                    onClick={() => onRegisterFingerprint(student.id)}
+                                    onClick={() => onRegisterFingerprint(student)}
                                 >
                                     <Fingerprint className="w-4 h-4 mr-2" /> Đăng ký
                                 </Button>
                             )}
                         </TableCell>
                         <TableCell className="flex space-x-2">
-                            <Button style={{ marginRight: '10px' }} size="icon" onClick={() => onEdit(student)}>
+                            <Button
+                                style={{ marginRight: "10px" }}
+                                size="icon"
+                                onClick={() => onEdit(student)}
+                            >
                                 <Edit className="w-4 h-4" />
                             </Button>
-                            <Button size="icon" variant="destructive" onClick={() => onDelete(student.id)}>
+                            <Button
+                                size="icon"
+                                variant="destructive"
+                                onClick={() => onDelete(student)}
+                            >
                                 <Trash className="w-4 h-4" />
                             </Button>
                         </TableCell>

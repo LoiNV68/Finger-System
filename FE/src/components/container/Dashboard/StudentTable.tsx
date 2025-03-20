@@ -1,17 +1,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Student } from "./DashboardContainer";
+
 
 // Định nghĩa kiểu dữ liệu cho sinh viên
-interface Student {
-    id: string;
-    name: string;
-    gender: string;
-    studentId: string;
-    timeIn: string;
-    timeOut: string;
-    room: string;
-    class: string;
-    department: string;
-}
+
 
 interface StudentTableProps {
     filteredData: Student[];

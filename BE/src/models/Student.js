@@ -6,7 +6,7 @@ const studentSchema = new mongoose.Schema({
   gender: { type: String, required: true },
   class: { type: String, required: true },
   department: { type: String, required: true },
-  fingerprintTemplate: { type: String }, // Lưu template vân tay (Base64 hoặc Buffer)
+ 
 });
 
 module.exports = mongoose.model("Student", studentSchema);

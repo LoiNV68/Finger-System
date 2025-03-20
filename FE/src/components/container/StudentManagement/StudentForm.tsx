@@ -24,12 +24,11 @@ export function StudentForm({ student, onSave, isAdd }: StudentFormProps) {
         setClass("");
         setDepartment("");
     };
-    // Thay thế dòng isAdd && resetForm();
+
     useEffect(() => {
         if (isAdd) {
             resetForm();
         } else if (student) {
-            // Khi editing, đảm bảo form có dữ liệu từ student
             setName(student.name || "");
             setGender(student.gender || "");
             setStudentId(student.studentId || "");
@@ -38,29 +37,75 @@ export function StudentForm({ student, onSave, isAdd }: StudentFormProps) {
         }
     }, [isAdd, student]);
 
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
 
-    const handleSubmit = () => {
+        // Kiểm tra dữ liệu hợp lệ
+        if (!name || !gender || !studentId || !class_ || !department) {
+            alert("Vui lòng điền đầy đủ thông tin sinh viên.");
+            return;
+        }
+
         onSave({
-            id: student?.id || 0,
             name,
             gender,
             studentId,
             class: class_,
             department,
-            fingerprintRegistered: student?.fingerprintRegistered || false,
-            fingerprintId: student?.fingerprintId || null
         });
     };
 
     return (
-        <form style={{ padding: '20px' }} className="space-y-4">
-            <Input style={{ marginBottom: '15px' }} placeholder="Tên sinh viên" value={name} onChange={e => setName(e.target.value)} />
-            <Input style={{ marginBottom: '15px' }} placeholder="Giới tính" value={gender} onChange={e => setGender(e.target.value)} />
-            <Input style={{ marginBottom: '15px' }} placeholder="Mã sinh viên" value={studentId} onChange={e => setStudentId(e.target.value)} />
-            <Input style={{ marginBottom: '15px' }} placeholder="Lớp" value={class_} onChange={e => setClass(e.target.value)} />
-            <Input style={{ marginBottom: '15px' }} placeholder="Viện" value={department} onChange={e => setDepartment(e.target.value)} />
+        <form style={{ padding: "20px" }} className="space-y-4" onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '10px' }}>
+                <label htmlFor="name">Tên sinh viên</label>
+                <Input
+                    id="name"
+                    placeholder="Nhập tên sinh viên"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                />
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+                <label htmlFor="gender">Giới tính</label>
+                <Input
+                    id="gender"
+                    placeholder="Nhập giới tính"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                />
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+                <label htmlFor="studentId">Mã sinh viên</label>
+                <Input
+                    id="studentId"
+                    placeholder="Nhập mã sinh viên"
+                    value={studentId}
+                    onChange={(e) => setStudentId(e.target.value)}
+                />
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+                <label htmlFor="class">Lớp</label>
+                <Input
+                    id="class"
+                    placeholder="Nhập lớp"
+                    value={class_}
+                    onChange={(e) => setClass(e.target.value)}
+                />
+            </div>
+            <div style={{ marginBottom: '10px' }}>
+                <label htmlFor="department">Viện</label>
+                <Input
+                    id="department"
+                    placeholder="Nhập viện"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                />
+            </div>
             <DialogFooter>
-                <Button style={{ padding: '10px' }} onClick={handleSubmit}>Lưu</Button>
+                <Button style={{ padding: "10px" }} type="submit">
+                    Lưu
+                </Button>
             </DialogFooter>
         </form>
     );

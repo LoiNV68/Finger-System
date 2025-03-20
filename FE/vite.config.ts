@@ -14,6 +14,11 @@ export default defineConfig({
     'process.env': {
       PUBLIC_URL: ''
     }
-  }
+  },
+  server: {
+    proxy: {
+      '/api': 'http://192.170.32.101:5000',
+    },
+  },
 
 })

@@ -1,119 +1,122 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Edit, Trash } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
 import { RoomTable } from "./RoomTable";
 import { RoomForm } from "./RoomForm";
 
-interface Room {
-    id: number;
+export interface Room {
+    _id: string;
     name: string;
     floor: number;
     deviceId?: string;
-    deviceStatus?: string;
+    deviceName?: string;
+    status: string;
 }
 
-export default function RoomManagement() {
-    const roomsPerFloor = 5;
-    const initialRooms: Room[] = Array.from({ length: roomsPerFloor }, (_, index) => ({
-        id: index + 1,
-        name: `Phòng ${((index % roomsPerFloor) + 1).toString().padStart(2, '0')}`,
-        floor: Math.floor(index / roomsPerFloor) + 1,
-        deviceId: index % 3 === 0 ? `ESP32-Wroom` : undefined,
-        deviceStatus: index % 3 === 0 ? "Hoạt động" : "Chưa gán"
-    }));
+const API = process.env.API_ROOM || "http://localhost:5000/api/rooms";
 
-    const [rooms, setRooms] = useState<Room[]>(initialRooms);
+export default function RoomManagement() {
+    const [rooms, setRooms] = useState<Room[]>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingRoom, setEditingRoom] = useState<Room | null>(null);
     const [isAdd, setIsAdd] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // Form state
-    const [roomName, setRoomName] = useState("");
-    const [roomFloor, setRoomFloor] = useState<number>(1);
-    const [deviceId, setDeviceId] = useState("");
-    const [deviceStatus, setDeviceStatus] = useState("Chưa gán");
-
-    // Reset form function
-    const resetForm = () => {
-        setRoomName("");
-        setRoomFloor(1);
-        setDeviceId("");
-        setDeviceStatus("Chưa gán");
-    };
-
-    // Handle form based on whether we're adding or editing
     useEffect(() => {
-        if (isAdd) {
-            resetForm();
-        } else if (editingRoom) {
-            setRoomName(editingRoom.name);
-            setRoomFloor(editingRoom.floor);
-            setDeviceId(editingRoom.deviceId || "");
-            setDeviceStatus(editingRoom.deviceStatus || "Chưa gán");
+        fetchRooms();
+    }, []);
+
+    const fetchRooms = async () => {
+        try {
+            const response = await fetch(`${API}`);
+            const data = await response.json();
+            setRooms(data);
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách phòng:", error);
         }
-    }, [isAdd, editingRoom]);
+    };
 
     const handleAddRoom = () => {
         setIsAdd(true);
         setEditingRoom(null);
+        setError(null);
         setDialogOpen(true);
     };
 
     const handleEditRoom = (room: Room) => {
         setIsAdd(false);
         setEditingRoom(room);
+        setError(null);
         setDialogOpen(true);
     };
 
-    const handleDeleteRoom = (roomId: number) => {
+    const handleDeleteRoom = async (roomId: string) => {
         if (confirm("Bạn có chắc chắn muốn xóa phòng này không?")) {
-            setRooms(rooms.filter(room => room.id !== roomId));
+            try {
+                await fetch(`${API}/delete/${roomId}`, { method: "DELETE" });
+                setRooms(rooms.filter(room => room._id !== roomId));
+            } catch (error) {
+                console.error("Lỗi khi xóa phòng:", error);
+            }
         }
     };
 
-    const handleSave = () => {
-        const newRoom: Room = {
-            id: editingRoom ? editingRoom.id : rooms.length > 0 ? Math.max(...rooms.map(r => r.id)) + 1 : 1,
-            name: roomName,
-            floor: roomFloor,
-            deviceId: deviceId || undefined,
-            deviceStatus: deviceId ? deviceStatus : "Chưa gán"
-        };
-
-        if (isAdd) {
-            setRooms([...rooms, newRoom]);
-        } else {
-            setRooms(rooms.map(room => room.id === newRoom.id ? newRoom : room));
+    const handleSave = async (roomData: Partial<Room>) => {
+        // Kiểm tra trùng tên phòng (chỉ khi thêm mới hoặc đổi tên)
+        const isDuplicate = rooms.some(r => r.name === roomData.name && r._id !== editingRoom?._id);
+        if (isDuplicate) {
+            setError("Tên phòng đã tồn tại. Vui lòng chọn tên khác.");
+            return;
         }
 
+        try {
+            let response;
+            if (isAdd) {
+                response = await fetch(`${API}/create`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(roomData),
+                });
+            } else if (editingRoom) {
+                response = await fetch(`${API}/update/${editingRoom._id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(roomData),
+                });
+            }
+
+            if (response) {
+                const updatedRoom = await response.json();
+                setRooms(prevRooms =>
+                    isAdd ? [...prevRooms, updatedRoom] : prevRooms.map(room => (room._id === updatedRoom._id ? updatedRoom : room))
+                );
+            }
+        } catch (error) {
+            console.error("Lỗi khi lưu phòng:", error);
+        }
         setDialogOpen(false);
-        resetForm();
     };
 
     return (
-        <div style={{ padding: '5px' }} className="p-6 bg-gray-100 min-h-screen">
-            <h1 style={{ padding: '20px' }} className="text-5xl font-bold text-center text-gray-900 mb-6">Quản lý Phòng học & Thiết bị</h1>
+        <div className="p-6 bg-gray-100 min-h-screen">
+            <h1 className="text-5xl font-bold text-center text-gray-900 mb-6">Quản lý Phòng học & Thiết bị</h1>
 
-            <div style={{ margin: '10px 0' }} className="flex justify-end mb-4">
-                <Button style={{ padding: '10px' }} onClick={handleAddRoom} className="bg-blue-500 text-white">
+            <div className="flex justify-end mb-4">
+                <Button onClick={handleAddRoom} className="bg-blue-500 text-white">
                     <Plus className="w-4 h-4 mr-2" /> Thêm phòng
                 </Button>
             </div>
 
-            <RoomTable
-                rooms={rooms}
-                onEdit={handleEditRoom}
-                onDelete={handleDeleteRoom}
-            />
+            <RoomTable rooms={rooms} onEdit={handleEditRoom} onDelete={handleDeleteRoom} />
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle style={{ padding: '20px' }}>{isAdd ? "Thêm mới" : "Chỉnh sửa"} Phòng học</DialogTitle>
+                        <DialogTitle>{isAdd ? "Thêm mới" : "Chỉnh sửa"} Phòng học</DialogTitle>
+                        <DialogDescription>
+                            Nhập thông tin phòng học và nhấn lưu để cập nhật hệ thống.
+                        </DialogDescription>
                     </DialogHeader>
                     <RoomForm
                         room={editingRoom}
@@ -121,6 +124,7 @@ export default function RoomManagement() {
                         onSave={handleSave}
                         onCancel={() => setDialogOpen(false)}
                     />
+                    {error && <p className="text-red-500 text-center mt-2">{error}</p>}
                 </DialogContent>
             </Dialog>
         </div>

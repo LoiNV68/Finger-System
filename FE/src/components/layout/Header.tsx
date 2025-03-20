@@ -68,18 +68,16 @@ const Header: React.FC = () => {
                 {isMenuOpen && (
                     <div className="md:hidden bg-white shadow-md rounded-md p-4 mt-2">
                         <div className="flex flex-col space-y-4">
-                            <a href="/" className="flex items-center gap-2 text-[#0268fd] font-medium hover:opacity-80 transition px-3 py-2">
-                                <FaHome /> Home
-                            </a>
-                            <a href="/about" className="flex items-center gap-2 text-[#0268fd] font-medium hover:opacity-80 transition px-3 py-2">
-                                <FaInfoCircle /> About
-                            </a>
-                            <a href="/services" className="flex items-center gap-2 text-[#0268fd] font-medium hover:opacity-80 transition px-3 py-2">
-                                <FaServicestack /> Services
-                            </a>
-                            <a href="/contact" className="flex items-center gap-2 text-[#0268fd] font-medium hover:opacity-80 transition px-3 py-2">
-                                <FaEnvelope /> Contact
-                            </a>
+                            <Link to="/" className="flex items-center gap-2 text-[#0268fd] font-medium hover:opacity-80 transition px-3 py-2">
+                                <FaHome /> Trang chủ
+                            </Link>
+                            <Link to="/student-management" className="flex items-center gap-2 text-[#0268fd] font-medium hover:opacity-80 transition px-3 py-2">
+                                <FaInfoCircle /> Quản lí sinh viên
+                            </Link>
+                            <Link to="/device-management" className="flex items-center gap-2 text-[#0268fd] font-medium hover:opacity-80 transition px-3 py-2">
+                                <FaServicestack /> Quản lí thiết bị
+                            </Link>
+
                         </div>
                     </div>
                 )}
