@@ -98,6 +98,32 @@ export default function RoomManagement() {
         setDialogOpen(false);
     };
 
+    const handleStatusChange = async (roomId: string, status: string) => {
+        try {
+            const roomToUpdate = rooms.find(room => room._id === roomId);
+            if (!roomToUpdate) return;
+
+            const updatedRoomData = { ...roomToUpdate, status };
+            const response = await fetch(`${API}/update/${roomId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedRoomData),
+            });
+
+            if (response.ok) {
+                const updatedRoom = await response.json();
+                setRooms(prevRooms =>
+                    prevRooms.map(room => (room._id === roomId ? updatedRoom : room))
+                );
+            } else {
+                throw new Error("Failed to update status");
+            }
+        } catch (error) {
+            console.error("Lỗi khi cập nhật trạng thái:", error);
+            alert("Có lỗi xảy ra khi cập nhật trạng thái!");
+        }
+    };
+
     return (
         <div className="p-6 bg-gray-100 min-h-screen">
             <h1 className="text-5xl font-bold text-center text-gray-900 mb-6">Quản lý Phòng học & Thiết bị</h1>
@@ -108,7 +134,12 @@ export default function RoomManagement() {
                 </Button>
             </div>
 
-            <RoomTable rooms={rooms} onEdit={handleEditRoom} onDelete={handleDeleteRoom} />
+            <RoomTable
+                rooms={rooms}
+                onEdit={handleEditRoom}
+                onDelete={handleDeleteRoom}
+                onStatusChange={handleStatusChange} // Truyền hàm xử lý trạng thái
+            />
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>

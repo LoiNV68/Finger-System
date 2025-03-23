@@ -4,65 +4,141 @@ const Student = require("../models/Student");
 const router = express.Router();
 
 let pendingStudentId = null;
+let pendingDeviceId = null;
+let pendingDeleteFingerprintId = null;
+let pendingDeleteDeviceId = null;
 
 router.post("/request-register", (req, res) => {
-  const { studentId } = req.body;
-  if (!studentId) return res.status(400).json({ message: "Thiếu studentId" });
+  const { studentId, deviceId } = req.body;
+  if (!studentId || !deviceId) {
+    return res.status(400).json({ message: "Thiếu studentId hoặc deviceId" });
+  }
   pendingStudentId = studentId;
+  pendingDeviceId = deviceId;
   res.json({ message: "Yêu cầu đăng ký đã được gửi" });
 });
 
-router.get("/check-request", (req, res) => {
-  res.json({ studentId: pendingStudentId || null });
+router.get("/check-request", async (req, res) => {
+  const { deviceId } = req.query;
+  if (!deviceId) {
+    return res.status(400).json({ message: "Thiếu deviceId" });
+  }
+  if (pendingStudentId && pendingDeviceId === deviceId) {
+    res.json({ studentId: pendingStudentId, deviceId: pendingDeviceId });
+  } else {
+    res.json({ studentId: null, deviceId });
+  }
 });
 
 router.post("/register-fingerprint", async (req, res) => {
-  const { studentId, fingerprintTemplate } = req.body;
-  if (!studentId || !fingerprintTemplate) {
-    return res.status(400).json({ message: "Thiếu studentId hoặc fingerprintTemplate" });
+  const { studentId, fingerprintId, deviceId } = req.body;
+  if (!studentId || !fingerprintId || !deviceId) {
+    return res.status(400).json({ message: "Thiếu thông tin cần thiết" });
   }
-  try {
-    const student = await Student.findOne({ studentId });
-    if (!student) return res.status(404).json({ message: "Sinh viên không tồn tại" });
 
-    let fingerprint = await Fingerprint.findOne({ studentId });
-    if (fingerprint) {
-      fingerprint.fingerprintTemplate = fingerprintTemplate;
-    } else {
-      fingerprint = new Fingerprint({ studentId, fingerprintTemplate });
-    }
-    await fingerprint.save();
-    pendingStudentId = null;
-    res.json({ message: "Lưu vân tay thành công" });
-  } catch (error) {
-    res.status(500).json({ message: "Lỗi server", error });
+  const student = await Student.findOne({ studentId, deviceId });
+  if (!student) {
+    return res
+      .status(403)
+      .json({ message: "DeviceId không khớp với sinh viên" });
   }
+
+  const existingFingerprint = await Fingerprint.findOne({
+    fingerprintId,
+    deviceId,
+  });
+  if (existingFingerprint) {
+    return res
+      .status(400)
+      .json({ message: "FingerprintId đã tồn tại trên thiết bị này" });
+  }
+
+  const fingerprint = new Fingerprint({
+    studentId,
+    fingerprintId,
+    deviceId,
+  });
+  await fingerprint.save();
+
+  pendingStudentId = null;
+  pendingDeviceId = null;
+
+  res.status(200).json({ message: "Đăng ký thành công" });
 });
 
 router.post("/verify-fingerprint", async (req, res) => {
-  const { fingerprintTemplate } = req.body;
-  if (!fingerprintTemplate) return res.status(400).json({ message: "Thiếu fingerprintTemplate" });
+  const { fingerprintId, deviceId } = req.body;
+  if (!fingerprintId || !deviceId) {
+    return res
+      .status(400)
+      .json({ message: "Thiếu fingerprintId hoặc deviceId" });
+  }
 
-  try {
-    const fingerprint = await Fingerprint.findOne({ fingerprintTemplate });
-    if (!fingerprint) return res.status(404).json({ message: "Không tìm thấy sinh viên" });
-
-    const student = await Student.findOne({ studentId: fingerprint.studentId });
-    res.json({
-      message: "Xác thực thành công",
-      student: { studentId: student._id, name: student.name, class: student.class },
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Lỗi server", error });
+  const fingerprint = await Fingerprint.findOne({ fingerprintId, deviceId });
+  if (fingerprint) {
+    res.json({ studentId: fingerprint.studentId });
+  } else {
+    res.status(404).json({ message: "Không tìm thấy vân tay" });
   }
 });
 
-router.get("/sync", async (req, res) => {
+router.post("/delete-fingerprint", async (req, res) => {
+  const { studentId, deviceId } = req.body;
+  if (!studentId || !deviceId) {
+    return res.status(400).json({ message: "Thiếu studentId hoặc deviceId" });
+  }
+
+  const fingerprint = await Fingerprint.findOne({ studentId, deviceId });
+  if (!fingerprint) {
+    return res.status(404).json({ message: "Không tìm thấy vân tay" });
+  }
+
+  await Fingerprint.deleteOne({ studentId, deviceId });
+  pendingDeleteFingerprintId = fingerprint.fingerprintId;
+  pendingDeleteDeviceId = deviceId;
+  res.json({
+    message: "Yêu cầu xóa vân tay đã được gửi",
+    fingerprintId: fingerprint.fingerprintId,
+  });
+});
+
+router.get("/check-delete", async (req, res) => {
+  const { deviceId } = req.query;
+  if (!deviceId) {
+    return res.status(400).json({ message: "Thiếu deviceId" });
+  }
+  if (pendingDeleteFingerprintId && pendingDeleteDeviceId === deviceId) {
+    res.json({ fingerprintId: pendingDeleteFingerprintId });
+    pendingDeleteFingerprintId = null; // Reset sau khi gửi
+    pendingDeleteDeviceId = null;
+  } else {
+    res.json({ fingerprintId: 0 });
+  }
+});
+
+// Route mới: Lấy ID tiếp theo cho fingerprint
+router.get("/next-id", async (req, res) => {
+  const { deviceId } = req.query;
+  if (!deviceId) {
+    return res.status(400).json({ message: "Thiếu deviceId" });
+  }
+
   try {
-    const fingerprints = await Fingerprint.find({}, "studentId fingerprintTemplate");
-    res.json(fingerprints);
+    // Tìm tất cả fingerprint đã đăng ký cho deviceId
+    const fingerprints = await Fingerprint.find({ deviceId });
+    if (fingerprints.length === 0) {
+      // Nếu chưa có fingerprint nào, trả về ID 1
+      return res.json({ nextId: 1 });
+    }
+
+    // Lấy fingerprintId lớn nhất
+    const maxId = Math.max(...fingerprints.map((fp) => fp.fingerprintId));
+    const nextId = maxId + 1;
+
+    res.json({ nextId });
   } catch (error) {
-    res.status(500).json({ error: "Lỗi khi lấy danh sách vân tay" });
+    console.error("Lỗi khi lấy nextId:", error);
+    res.status(500).json({ message: "Lỗi server khi lấy nextId" });
   }
 });
 

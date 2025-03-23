@@ -5,7 +5,8 @@ import { Summary } from "@/components/container/Dashboard/Summary";
 import { FilterBar } from "@/components/business/FilterBar";
 import { StudentTable } from "@/components/container/Dashboard/StudentTable";
 
-const API_ATTENDANCE = "http://localhost:5000/api/attendance";
+const API_ATTENDANCE = process.env.API_ATTENDANCE || "http://localhost:5000/api/attendance";
+const API_STUDENT = process.env.API_STUDENT || "http://localhost:5000/api/students";
 
 export interface Student {
     id: string;
@@ -28,7 +29,7 @@ interface Filters {
 }
 
 type FilterKey = keyof Filters;
-const API = process.env.API_ATTENDANCE || "http://localhost:5000/api/rooms";
+
 export default function Dashboard() {
     const [filters, setFilters] = useState<Filters>({
         name: "",
@@ -41,25 +42,22 @@ export default function Dashboard() {
     const [filteredData, setFilteredData] = useState<Student[]>([]);
     const [registeredStudents, setRegisteredStudents] = useState<any[]>([]);
 
-    useEffect(() => {
-        fetchAttendanceData();
-        fetchFingerprintData();
-    }, []);
-
     const fetchAttendanceData = async () => {
         try {
             const response = await fetch(API_ATTENDANCE);
+            if (!response.ok) throw new Error("Lỗi khi gọi API");
             const data = await response.json();
+
             const mappedData: Student[] = data.map((record: any) => ({
-                id: record._id,
-                name: record.student.name,
-                gender: record.student.gender,
-                studentId: record.student.studentId,
-                timeIn: new Date(record.checkInTime).toLocaleString(),
+                id: record._id || "N/A",
+                name: record.student?.name || "Không xác định",
+                gender: record.student?.gender || "N/A",
+                studentId: record.student?.studentId || "N/A",
+                timeIn: record.checkInTime ? new Date(record.checkInTime).toLocaleString() : "N/A",
                 timeOut: record.checkOutTime ? new Date(record.checkOutTime).toLocaleString() : "",
-                room: record.room.name,
-                class: record.student.class,
-                department: record.student.department,
+                room: record.room?.name || "N/A",
+                class: record.student?.class || "N/A",
+                department: record.student?.department || "N/A",
             }));
             setStudents(mappedData);
             setFilteredData(mappedData);
@@ -70,13 +68,26 @@ export default function Dashboard() {
 
     const fetchFingerprintData = async () => {
         try {
-            const response = await fetch(`${API}`);
+            const response = await fetch(`${API_STUDENT}/list`);
             const data = await response.json();
-            setRegisteredStudents(data.data);
+            setRegisteredStudents(data.data || []);
         } catch (error) {
             console.error("Lỗi khi lấy danh sách vân tay:", error);
         }
     };
+
+    useEffect(() => {
+        fetchAttendanceData();
+        fetchFingerprintData();
+
+        // Polling: Cập nhật dữ liệu mỗi 5 giây
+        const interval = setInterval(() => {
+            fetchAttendanceData();
+        }, 2000);
+
+        // Cleanup interval khi component unmount
+        return () => clearInterval(interval);
+    }, []);
 
     const handleFilterChange = (field: FilterKey, value: string) => {
         setFilters((prevFilters) => ({

@@ -13,6 +13,15 @@ import { StudentTable } from "./StudentTable";
 import { StudentForm } from "./StudentForm";
 import axios from "axios";
 
+export interface Room {
+    _id: string;
+    name: string;
+    floor: number;
+    deviceId: string;
+    deviceName: string;
+    status: string;
+}
+
 export interface Student {
     _id?: string;
     studentId: string;
@@ -20,7 +29,9 @@ export interface Student {
     gender: string;
     class: string;
     department: string;
-    fingerprintTemplate?: string | null;
+    deviceId?: string;
+    hasFingerprint?: boolean;
+    roomName?: string;
 }
 
 interface Filters {
@@ -33,7 +44,8 @@ interface Filters {
 
 type FilterKey = keyof Filters;
 const API_URL = process.env.API_STUDENT || "http://localhost:5000/api/students";
-const FINGERPRINT_API_URL = process.env.API_STUDENT || "http://localhost:5000/api/fingerprint";
+const FINGERPRINT_API_URL = process.env.API_FINGERPRINT || "http://localhost:5000/api/fingerprint";
+const ROOM_API_URL = process.env.API_ROOM || "http://localhost:5000/api/rooms";
 
 export default function StudentManagement() {
     const [isAdd, setIsAdd] = useState(false);
@@ -41,6 +53,7 @@ export default function StudentManagement() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingStudent, setEditingStudent] = useState<Student | null>(null);
     const [filteredData, setFilteredData] = useState<Student[]>([]);
+    const [rooms, setRooms] = useState<Room[]>([]);
     const [filters, setFilters] = useState<Filters>({
         name: "",
         studentId: "",
@@ -48,19 +61,39 @@ export default function StudentManagement() {
         faculty: "",
         gender: "",
     });
-    const [registeredStudents, setRegisteredStudents] = useState<any[]>([]);
+
+    const fetchStudents = async () => {
+        try {
+            const response = await axios.get(API_URL);
+            console.log("Dữ liệu sinh viên từ API:", response.data);
+            setStudents(response.data);
+            setFilteredData(response.data);
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách sinh viên:", error);
+        }
+    };
+
+    const fetchRooms = async () => {
+        try {
+            const response = await axios.get(ROOM_API_URL);
+            console.log("Danh sách phòng từ API:", response.data);
+            setRooms(response.data);
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách phòng:", error);
+        }
+    };
+
     useEffect(() => {
-        const fetchStudents = async () => {
-            try {
-                const response = await axios.get(API_URL);
-                console.log(response.data);
-                setStudents(response.data);
-                setFilteredData(response.data);
-            } catch (error) {
-                console.error("Lỗi khi lấy danh sách sinh viên:", error);
-            }
-        };
         fetchStudents();
+        fetchRooms();
+
+        // Polling: Cập nhật danh sách sinh viên mỗi 5 giây
+        const interval = setInterval(() => {
+            fetchStudents();
+        }, 5000);
+
+        // Cleanup khi component unmount
+        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
@@ -93,9 +126,10 @@ export default function StudentManagement() {
             setDialogOpen(false);
             setEditingStudent(null);
             setIsAdd(false);
-        } catch (error) {
+            fetchStudents();
+        } catch (error: any) {
             console.error("Lỗi khi lưu sinh viên:", error);
-            alert("Có lỗi xảy ra khi lưu sinh viên!");
+            alert(error.response?.data?.error || "Có lỗi xảy ra khi lưu sinh viên!");
         }
     };
 
@@ -123,32 +157,24 @@ export default function StudentManagement() {
         setDialogOpen(true);
         setEditingStudent(null);
     };
-    const fetchFingerprintData = async () => {
-        try {
-            const response = await fetch("http://localhost:5000/api/student/list");
-            const data = await response.json();
-            setRegisteredStudents(data.data);
-        } catch (error) {
-            console.error("Lỗi khi lấy danh sách vân tay:", error);
-        }
-    };
+
     const handleRegisterFingerprint = async (student: Student) => {
         try {
+            if (!student.deviceId) {
+                alert("Sinh viên chưa được gán phòng học/thiết bị!");
+                return;
+            }
             const response = await axios.post(`${FINGERPRINT_API_URL}/request-register`, {
                 studentId: student.studentId,
+                deviceId: student.deviceId,
             });
-            alert(
-                `Yêu cầu đăng ký vân tay cho sinh viên ${student.studentId} đã được gửi! Vui lòng quét vân tay trên ESP32.`
-            );
-            console.log(response.data);
-            fetchFingerprintData();
+            if (response.data.message === "Yêu cầu đăng ký đã được gửi") {
+                alert(`Yêu cầu đăng ký vân tay cho ${student.studentId} đã được gửi! Vui lòng quét vân tay trên thiết bị ${student.deviceId}.`);
+            }
         } catch (error) {
-            console.error("Lỗi khi gửi yêu cầu đăng ký vân tay:", error);
-            alert("Có lỗi xảy ra khi gửi yêu cầu đăng ký vân tay!");
+            alert("Lỗi: " + (error || "Không thể gửi yêu cầu đăng ký!"));
         }
     };
-
-    
 
     const handleFilterChange = (field: keyof Filters, value: string) => {
         setFilters((prevFilters) => ({
@@ -206,7 +232,13 @@ export default function StudentManagement() {
                                 : "Thêm thông tin sinh viên mới."}
                         </DialogDescription>
                     </DialogHeader>
-                    <StudentForm student={editingStudent} onSave={handleSave} isAdd={isAdd} />
+                    <StudentForm
+                        student={editingStudent}
+                        onSave={handleSave}
+                        isAdd={isAdd}
+                        rooms={rooms}
+                        students={students} // Truyền danh sách sinh viên để validate
+                    />
                 </DialogContent>
             </Dialog>
         </div>

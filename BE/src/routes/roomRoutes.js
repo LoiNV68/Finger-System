@@ -17,10 +17,20 @@ router.get("/", async (req, res) => {
 // 🆕 Tạo phòng mới
 router.post("/create", async (req, res) => {
   try {
+    const { name, floor, deviceName, status } = req.body;
+
+    // Kiểm tra xem tên phòng đã tồn tại chưa
+    const existingRoom = await Room.findOne({ name });
+    if (existingRoom) {
+      return res.status(400).json({ error: "Tên phòng đã tồn tại" });
+    }
+
     const room = new Room({
       deviceId: uuidv4(), // Tạo deviceId duy nhất
-      status: "Không có thiết bị", // Mặc định trạng thái
-      ...req.body,
+      name,
+      floor,
+      deviceName: deviceName || undefined,
+      status: status || (deviceName ? "Hoạt động" : "Không có thiết bị"), // Mặc định trạng thái dựa trên deviceName
     });
 
     await room.save();
@@ -30,21 +40,36 @@ router.post("/create", async (req, res) => {
   }
 });
 
-// 🔄 Cập nhật thông tin phòng (hỗ trợ reset deviceId nếu cần)
+// 🔄 Cập nhật thông tin phòng
 router.put("/update/:id", async (req, res) => {
   try {
-    const updatedData = { ...req.body };
+    const { id } = req.params;
+    const { name, floor, deviceName, status, resetDeviceId } = req.body;
+
+    // Kiểm tra trùng tên phòng (trừ phòng hiện tại)
+    const existingRoom = await Room.findOne({ name, _id: { $ne: id } });
+    if (existingRoom) {
+      return res.status(400).json({ error: "Tên phòng đã tồn tại" });
+    }
+
+    const updatedData = {
+      name,
+      floor,
+      deviceName: deviceName || undefined,
+      status,
+    };
 
     // Nếu có yêu cầu reset deviceId
-    if (req.body.resetDeviceId) {
+    if (resetDeviceId) {
       updatedData.deviceId = uuidv4();
     }
 
-    const updatedRoom = await Room.findByIdAndUpdate(
-      req.params.id,
-      updatedData,
-      { new: true }
-    );
+    const updatedRoom = await Room.findByIdAndUpdate(id, updatedData, {
+      new: true,
+    });
+    if (!updatedRoom) {
+      return res.status(404).json({ error: "Không tìm thấy phòng" });
+    }
 
     res.json(updatedRoom);
   } catch (error) {
@@ -55,13 +80,17 @@ router.put("/update/:id", async (req, res) => {
 // 🗑️ Xóa phòng học
 router.delete("/delete/:id", async (req, res) => {
   try {
-    await Room.findByIdAndDelete(req.params.id);
+    const room = await Room.findByIdAndDelete(req.params.id);
+    if (!room) {
+      return res.status(404).json({ error: "Không tìm thấy phòng" });
+    }
     res.json({ message: "Xóa phòng thành công" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
+// 🔍 Lấy phòng theo deviceId
 router.get("/get-by-device", async (req, res) => {
   try {
     const { deviceId } = req.query;
@@ -72,4 +101,5 @@ router.get("/get-by-device", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 module.exports = router;
