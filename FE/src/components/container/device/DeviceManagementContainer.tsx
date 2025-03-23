@@ -143,7 +143,7 @@ export default function RoomManagement() {
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>
-                    <DialogHeader>
+                    <DialogHeader style={{padding: '10px'}}>
                         <DialogTitle>{isAdd ? "Thêm mới" : "Chỉnh sửa"} Phòng học</DialogTitle>
                         <DialogDescription>
                             Nhập thông tin phòng học và nhấn lưu để cập nhật hệ thống.

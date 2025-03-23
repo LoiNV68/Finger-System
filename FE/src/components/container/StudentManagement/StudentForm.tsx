@@ -30,9 +30,10 @@ interface StudentFormProps {
     isAdd: boolean;
     rooms: Room[];
     students: Student[]; // Thêm danh sách sinh viên để kiểm tra trùng
+    onCancel: () => void;
 }
 
-export function StudentForm({ student, onSave, isAdd, rooms, students }: StudentFormProps) {
+export function StudentForm({ student, onSave, isAdd, rooms, students, onCancel }: StudentFormProps) {
     const [name, setName] = useState(student?.name || "");
     const [gender, setGender] = useState(student?.gender || "");
     const [studentId, setStudentId] = useState(student?.studentId || "");
@@ -127,10 +128,11 @@ export function StudentForm({ student, onSave, isAdd, rooms, students }: Student
                 </Select>
             </div>
             <DialogFooter>
+                <Button style={{ padding: '10px' }} type="button" variant="outline" onClick={onCancel}>Hủy</Button>
                 <Button style={{ padding: "10px" }} type="submit">
                     Lưu
                 </Button>
             </DialogFooter>
-        </form>
+        </form >
     );
 }

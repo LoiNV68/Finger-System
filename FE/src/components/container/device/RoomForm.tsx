@@ -49,9 +49,9 @@ export function RoomForm({ room, isAdd, onSave, onCancel }: RoomFormProps) {
 
     return (
         <>
-            <form className="space-y-4 p-4">
+            <form style={{ padding: '10px' }} className="space-y-4 p-4">
                 {/* Tên phòng */}
-                <div className="space-y-2">
+                <div style={{ marginBottom: '10px' }}>
                     <label htmlFor="roomName" className="text-sm font-medium">Tên phòng</label>
                     <Input
                         id="roomName"
@@ -62,7 +62,7 @@ export function RoomForm({ room, isAdd, onSave, onCancel }: RoomFormProps) {
                 </div>
 
                 {/* Tầng */}
-                <div className="space-y-2">
+                <div style={{ marginBottom: '10px' }}>
                     <label htmlFor="roomFloor" className="text-sm font-medium">Tầng</label>
                     <Input
                         id="roomFloor"
@@ -74,7 +74,7 @@ export function RoomForm({ room, isAdd, onSave, onCancel }: RoomFormProps) {
                 </div>
 
                 {/* Thiết bị vân tay */}
-                <div className="space-y-2">
+                <div style={{ marginBottom: '10px' }}>
                     <label htmlFor="deviceName" className="text-sm font-medium">Tên thiết bị</label>
                     <Input
                         id="deviceName"
@@ -85,7 +85,7 @@ export function RoomForm({ room, isAdd, onSave, onCancel }: RoomFormProps) {
                 </div>
 
                 {/* Trạng thái */}
-                <div className="space-y-2">
+                <div style={{ marginBottom: '10px' }}>
                     <label htmlFor="status" className="text-sm font-medium">Trạng thái</label>
                     <Select value={status} onValueChange={setStatus}>
                         <SelectTrigger>
@@ -101,8 +101,8 @@ export function RoomForm({ room, isAdd, onSave, onCancel }: RoomFormProps) {
             </form>
 
             <DialogFooter>
-                <Button variant="outline" onClick={onCancel}>Hủy</Button>
-                <Button onClick={handleSubmit}>Lưu</Button>
+                <Button style={{ padding: '10px', margin: '10px' }} variant="outline" onClick={onCancel}>Hủy</Button>
+                <Button style={{ padding: '10px', margin: '10px' }} onClick={handleSubmit}>Lưu</Button>
             </DialogFooter>
         </>
     );

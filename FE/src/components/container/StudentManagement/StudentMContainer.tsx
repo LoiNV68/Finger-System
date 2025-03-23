@@ -238,6 +238,7 @@ export default function StudentManagement() {
                         isAdd={isAdd}
                         rooms={rooms}
                         students={students} // Truyền danh sách sinh viên để validate
+                        onCancel={() => setDialogOpen(false)}
                     />
                 </DialogContent>
             </Dialog>
