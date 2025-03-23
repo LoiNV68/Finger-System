@@ -48,9 +48,9 @@ export const Summary = () => {
             console.error("Lỗi khi lấy dữ liệu Summary:", error);
         }
     };
-    
-    useEffect(() => {
 
+    useEffect(() => {
+        fetchSummaryData();
         // Polling: Cập nhật dữ liệu mỗi 5 giây
         const interval = setInterval(() => {
             fetchSummaryData();

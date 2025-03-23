@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Summary } from "@/components/container/Dashboard/Summary";
 import { FilterBar } from "@/components/business/FilterBar";
 import { StudentTable } from "@/components/container/Dashboard/StudentTable";
+import { exportToExcel } from "@/components/utils/exportToExcel"; // Import hàm đã tách
 
 const API_ATTENDANCE = process.env.API_ATTENDANCE || "http://localhost:5000/api/attendance";
 const API_STUDENT = process.env.API_STUDENT || "http://localhost:5000/api/students";
@@ -80,12 +81,10 @@ export default function Dashboard() {
         fetchAttendanceData();
         fetchFingerprintData();
 
-        // Polling: Cập nhật dữ liệu mỗi 5 giây
         const interval = setInterval(() => {
             fetchAttendanceData();
         }, 2000);
 
-        // Cleanup interval khi component unmount
         return () => clearInterval(interval);
     }, []);
 
@@ -127,6 +126,34 @@ export default function Dashboard() {
         setFilteredData(filtered);
     }, [filters, students]);
 
+    // Sử dụng hàm exportToExcel đã tách
+    const handleExportToExcel = () => {
+        const headers = [
+            "Tên sinh viên",
+            "Giới tính",
+            "Mã sinh viên",
+            "Thời gian vào",
+            "Thời gian ra",
+            "Phòng học",
+            "Lớp",
+            "Viện",
+        ];
+
+        const data = filteredData.map((student) => [
+            student.name,
+            student.gender,
+            student.studentId,
+            student.timeIn,
+            student.timeOut || "N/A",
+            student.room,
+            student.class,
+            student.department,
+        ]);
+
+        // Truyền tên file cơ bản, hàm exportToExcel sẽ tự động thêm ngày tháng năm
+        exportToExcel(headers, data, "Danh sách điểm danh", "Danh_sach_diem_danh");
+    };
+
     return (
         <div style={{ margin: "5px" }} className="p-6">
             <h1 style={{ margin: "20px 0" }} className="text-5xl font-bold text-center text-gray-900 mb-6">
@@ -145,6 +172,7 @@ export default function Dashboard() {
                         style={{ padding: "10px", marginRight: "10px" }}
                         variant="outline"
                         className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition-colors duration-300"
+                        onClick={handleExportToExcel}
                     >
                         <Download className="w-4 h-4 mr-2" /> Xuất Excel
                     </Button>

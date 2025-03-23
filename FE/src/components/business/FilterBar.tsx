@@ -38,7 +38,7 @@ export const FilterBar = ({ filters, handleFilterChange, resetFilters }: FilterB
                     onChange={(e) => handleFilterChange("studentId", e.target.value)}
                 />
             </div>
-            <div>
+            {/* <div>
                 <Select
                     value={filters.class}
                     onValueChange={(value) => handleFilterChange("class", value)}
@@ -82,7 +82,7 @@ export const FilterBar = ({ filters, handleFilterChange, resetFilters }: FilterB
                         <SelectItem value="Nữ">Nữ</SelectItem>
                     </SelectContent>
                 </Select>
-            </div>
+            </div> */}
             <div>
                 <Button
                     variant="outline"
