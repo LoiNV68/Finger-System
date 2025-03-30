@@ -42,7 +42,10 @@ export default function Dashboard() {
     const [students, setStudents] = useState<Student[]>([]);
     const [filteredData, setFilteredData] = useState<Student[]>([]);
     const [registeredStudents, setRegisteredStudents] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true); // Thêm trạng thái loading
+    const [isLoading, setIsLoading] = useState(true);
+    const [classOptions, setClassOptions] = useState<string[]>([]); // Lớp
+    const [facultyOptions, setFacultyOptions] = useState<string[]>([]); // Viện
+    const [genderOptions, setGenderOptions] = useState<string[]>([]); // Giới tính
 
     const fetchAttendanceData = async () => {
         try {
@@ -63,10 +66,18 @@ export default function Dashboard() {
             }));
             setStudents(mappedData);
             setFilteredData(mappedData);
+
+            // Lấy danh sách giá trị duy nhất
+            const uniqueClasses = [...new Set(mappedData.map((s) => s.class).filter(Boolean))];
+            const uniqueFaculties = [...new Set(mappedData.map((s) => s.department).filter(Boolean))];
+            const uniqueGenders = [...new Set(mappedData.map((s) => s.gender).filter(Boolean))];
+            setClassOptions(uniqueClasses);
+            setFacultyOptions(uniqueFaculties);
+            setGenderOptions(uniqueGenders);
         } catch (error) {
             console.error("Lỗi khi lấy dữ liệu điểm danh:", error);
         } finally {
-            setIsLoading(false); // Tắt loading sau khi tải xong
+            setIsLoading(false);
         }
     };
 
@@ -180,7 +191,14 @@ export default function Dashboard() {
                         <Download className="w-4 h-4 mr-2" /> Xuất Excel
                     </Button>
                 </div>
-                <FilterBar filters={filters} handleFilterChange={handleFilterChange} resetFilters={resetFilters} />
+                <FilterBar
+                    filters={filters}
+                    handleFilterChange={handleFilterChange}
+                    resetFilters={resetFilters}
+                    classOptions={classOptions}
+                    facultyOptions={facultyOptions}
+                    genderOptions={genderOptions}
+                />
                 {isLoading ? (
                     <div className="text-center py-4">Đang tải dữ liệu...</div>
                 ) : (

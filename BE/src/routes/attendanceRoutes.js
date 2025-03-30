@@ -53,4 +53,101 @@ router.get("/", async (req, res) => {
   }
 });
 
+// API tìm kiếm bản ghi điểm danh
+router.get("/search", async (req, res) => {
+  try {
+    const {
+      name,
+      studentId,
+      room,
+      class: className,
+      department,
+      gender,
+    } = req.query;
+
+    // Tạo điều kiện tìm kiếm
+    const query = {};
+
+    // Tìm kiếm trong Attendance với populate student và room
+    const attendanceQuery = {};
+
+    // Tìm kiếm theo studentId
+    if (studentId) {
+      const student = await Student.findOne({
+        studentId: { $regex: studentId, $options: "i" },
+      });
+      if (student) attendanceQuery.student = student._id;
+    }
+
+    // Tìm kiếm theo tên sinh viên
+    if (name) {
+      const students = await Student.find({
+        name: { $regex: name, $options: "i" },
+      });
+      if (students.length > 0)
+        attendanceQuery.student = { $in: students.map((s) => s._id) };
+    }
+
+    // Tìm kiếm theo phòng
+    if (room) {
+      const rooms = await Room.find({ name: { $regex: room, $options: "i" } });
+      if (rooms.length > 0)
+        attendanceQuery.room = { $in: rooms.map((r) => r._id) };
+    }
+
+    // Tìm kiếm theo lớp
+    if (className) {
+      const students = await Student.find({
+        class: { $regex: className, $options: "i" },
+      });
+      if (students.length > 0)
+        attendanceQuery.student = { $in: students.map((s) => s._id) };
+    }
+
+    // Tìm kiếm theo viện (department)
+    if (department) {
+      const students = await Student.find({
+        department: { $regex: department, $options: "i" },
+      });
+      if (students.length > 0)
+        attendanceQuery.student = { $in: students.map((s) => s._id) };
+    }
+
+    // Tìm kiếm theo giới tính
+    if (gender) {
+      const students = await Student.find({
+        gender: { $regex: gender, $options: "i" },
+      });
+      if (students.length > 0)
+        attendanceQuery.student = { $in: students.map((s) => s._id) };
+    }
+
+    // Thực hiện truy vấn
+    const attendanceRecords = await Attendance.find(attendanceQuery)
+      .populate("student")
+      .populate("room");
+
+    // Chuyển đổi dữ liệu sang định dạng mong muốn
+    const mappedData = attendanceRecords.map((record) => ({
+      id: record._id || "N/A",
+      name: record.student?.name || "Không xác định",
+      gender: record.student?.gender || "N/A",
+      studentId: record.student?.studentId || "N/A",
+      timeIn: record.checkInTime
+        ? new Date(record.checkInTime).toLocaleString()
+        : "N/A",
+      timeOut: record.checkOutTime
+        ? new Date(record.checkOutTime).toLocaleString()
+        : "",
+      room: record.room?.name || "N/A",
+      class: record.student?.class || "N/A",
+      department: record.student?.department || "N/A",
+    }));
+
+    res.status(200).json(mappedData);
+  } catch (error) {
+    console.error("Lỗi khi tìm kiếm điểm danh:", error);
+    res.status(500).json({ message: "Lỗi khi tìm kiếm điểm danh" });
+  }
+});
 module.exports = router;

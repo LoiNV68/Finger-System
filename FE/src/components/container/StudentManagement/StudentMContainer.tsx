@@ -54,6 +54,9 @@ export default function StudentManagement() {
     const [editingStudent, setEditingStudent] = useState<Student | null>(null);
     const [filteredData, setFilteredData] = useState<Student[]>([]);
     const [rooms, setRooms] = useState<Room[]>([]);
+    const [classOptions, setClassOptions] = useState<string[]>([]);
+    const [facultyOptions, setFacultyOptions] = useState<string[]>([]);
+    const [genderOptions, setGenderOptions] = useState<string[]>([]);
     const [filters, setFilters] = useState<Filters>({
         name: "",
         studentId: "",
@@ -64,10 +67,18 @@ export default function StudentManagement() {
 
     const fetchStudents = async () => {
         try {
-            const response = await axios.get(API_URL);
+            const response = await axios.get<Student[]>(API_URL); // Chỉ định kiểu Student[]
             console.log("Dữ liệu sinh viên từ API:", response.data);
             setStudents(response.data);
             setFilteredData(response.data);
+
+            // Lấy danh sách giá trị duy nhất và ép kiểu
+            const uniqueClasses = [...new Set(response.data.map((s) => s.class).filter(Boolean))] as string[];
+            const uniqueFaculties = [...new Set(response.data.map((s) => s.department).filter(Boolean))] as string[];
+            const uniqueGenders = [...new Set(response.data.map((s) => s.gender).filter(Boolean))] as string[];
+            setClassOptions(uniqueClasses);
+            setFacultyOptions(uniqueFaculties);
+            setGenderOptions(uniqueGenders);
         } catch (error) {
             console.error("Lỗi khi lấy danh sách sinh viên:", error);
         }
@@ -87,12 +98,10 @@ export default function StudentManagement() {
         fetchStudents();
         fetchRooms();
 
-        // Polling: Cập nhật danh sách sinh viên mỗi 5 giây
         const interval = setInterval(() => {
             fetchStudents();
         }, 5000);
 
-        // Cleanup khi component unmount
         return () => clearInterval(interval);
     }, []);
 
@@ -175,7 +184,7 @@ export default function StudentManagement() {
         }
     };
 
-    const handleFilterChange = (field: keyof Filters, value: string) => {
+    const handleFilterChange = (field: FilterKey, value: string) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
             [field]: value,
@@ -190,6 +199,7 @@ export default function StudentManagement() {
             faculty: "",
             gender: "",
         });
+        setFilteredData(students);
     };
 
     return (
@@ -202,6 +212,9 @@ export default function StudentManagement() {
                     filters={filters}
                     handleFilterChange={handleFilterChange}
                     resetFilters={resetFilters}
+                    classOptions={classOptions}
+                    facultyOptions={facultyOptions}
+                    genderOptions={genderOptions}
                 />
                 <Button
                     style={{ padding: "10px", marginBottom: "20px" }}
@@ -236,7 +249,7 @@ export default function StudentManagement() {
                         onSave={handleSave}
                         isAdd={isAdd}
                         rooms={rooms}
-                        students={students} // Truyền danh sách sinh viên để validate
+                        students={students}
                         onCancel={() => setDialogOpen(false)}
                     />
                 </DialogContent>

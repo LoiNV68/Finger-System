@@ -45,7 +45,7 @@ export function RoomTable({ rooms, onEdit, onDelete, onStatusChange }: RoomTable
                                     <SelectContent>
                                         <SelectItem value="Hoạt động">Hoạt động</SelectItem>
                                         <SelectItem value="Chưa hoạt động">Chưa hoạt động</SelectItem>
-                                        <SelectItem value="Không có thiết bị">Không có thiết bị</SelectItem>
+                                        <SelectItem value="Không có thiết bị">Không thiết bị</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </TableCell>

@@ -1,7 +1,7 @@
 const express = require("express");
 const Fingerprint = require("../models/Fingerprint");
 const Student = require("../models/Student");
-const Attendance = require("../models/Attendance"); // Thêm model Attendance
+const Attendance = require("../models/Attendance");
 const router = express.Router();
 
 let pendingStudentId = null;
