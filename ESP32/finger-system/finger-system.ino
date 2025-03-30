@@ -47,7 +47,7 @@ int getNextIdFromServer() {
   HTTPClient http;
   String url = String(serverUrl) + "/api/fingerprint/next-id?deviceId=" + String(deviceId);
   http.begin(url);
-  http.setTimeout(2000);
+  http.setTimeout(5000);
   int httpCode = http.GET();
   
   if (httpCode == 200) {
@@ -80,11 +80,12 @@ void loop() {
   delay(100);
 }
 
+//  Kiểm tra từ server xem có yêu cầu đăng ký vân tay nào không
 void checkFingerprintRequest() {
   HTTPClient http;
   String url = String(serverUrl) + "/api/fingerprint/check-request?deviceId=" + String(deviceId);
   http.begin(url);
-  http.setTimeout(2000);
+  http.setTimeout(5000);
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
@@ -105,6 +106,7 @@ void checkFingerprintRequest() {
   http.end();
 }
 
+// Đăng ký dấu vân tay mới
 void registerFingerprint(String studentId) {
   Serial.setTimeout(100); // Đặt timeout cho Serial là 100ms
 
@@ -212,11 +214,38 @@ void registerFingerprint(String studentId) {
   lcd.print("Ready");
 }
 
+// Gửi thông tin ID vân tay của sinh viên lên server
+void sendFingerprintIdToServer(String studentId, int fingerprintId) {
+  HTTPClient http;
+  String url = String(serverUrl) + "/api/fingerprint/register-fingerprint";
+  http.begin(url);
+  http.addHeader("Content-Type", "application/json");
+  http.setTimeout(4000);
+
+  DynamicJsonDocument doc(1024);
+  doc["studentId"] = studentId;
+  doc["fingerprintId"] = fingerprintId;
+  doc["deviceId"] = deviceId;
+  String payload;
+  serializeJson(doc, payload);
+
+  int httpCode = http.POST(payload);
+  if (httpCode == 200) {
+    lcd.setCursor(0, 1);
+    lcd.print("Success");
+  } else {
+    lcd.setCursor(0, 1);
+    lcd.print("Server Error");
+  }
+  http.end();
+}
+
+// Kiểm tra từ server xem có yêu cầu xóa vân tay nào không và xóa
 void checkDeleteFingerprintRequest() {
   HTTPClient http;
   String url = String(serverUrl) + "/api/fingerprint/check-delete?deviceId=" + String(deviceId);
   http.begin(url);
-  http.setTimeout(2000);
+  http.setTimeout(4000);
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
@@ -243,31 +272,7 @@ void checkDeleteFingerprintRequest() {
   http.end();
 }
 
-void sendFingerprintIdToServer(String studentId, int fingerprintId) {
-  HTTPClient http;
-  String url = String(serverUrl) + "/api/fingerprint/register-fingerprint";
-  http.begin(url);
-  http.addHeader("Content-Type", "application/json");
-  http.setTimeout(2000);
-
-  DynamicJsonDocument doc(1024);
-  doc["studentId"] = studentId;
-  doc["fingerprintId"] = fingerprintId;
-  doc["deviceId"] = deviceId;
-  String payload;
-  serializeJson(doc, payload);
-
-  int httpCode = http.POST(payload);
-  if (httpCode == 200) {
-    lcd.setCursor(0, 1);
-    lcd.print("Success");
-  } else {
-    lcd.setCursor(0, 1);
-    lcd.print("Server Error");
-  }
-  http.end();
-}
-
+// Kiểm tra vân tay để điểm danh
 void checkAttendance() {
   lcd.clear();
   lcd.print("Scan finger");
@@ -313,6 +318,7 @@ void checkAttendance() {
   lcd.print("Ready");
 }
 
+// Gửi fingerprintId để lấy StudentId
 String getStudentIdFromFingerprint(int fingerprintId) {
   HTTPClient http;
   String url = String(serverUrl) + "/api/fingerprint/verify-fingerprint";
@@ -336,6 +342,7 @@ String getStudentIdFromFingerprint(int fingerprintId) {
   return "";
 }
 
+// Gửi dữ liệu điểm danh
 void sendAttendanceToServer(String studentId) {
   HTTPClient http;
   String url = String(serverUrl) + "/api/attendance/check";

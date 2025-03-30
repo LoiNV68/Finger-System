@@ -1,21 +1,22 @@
 const Fingerprint = require("../models/Fingerprint");
 const Student = require("../models/Student");
 const Attendance = require("../models/Attendance");
-
-// Biến trạng thái toàn cục
-let pendingStudentId = null;
-let pendingDeviceId = null;
-let pendingDeleteFingerprintId = null;
-let pendingDeleteDeviceId = null;
+const redisClient = require("../config/redis");
 
 // Yêu cầu đăng ký vân tay
-exports.requestRegister = (req, res) => {
+exports.requestRegister = async (req, res) => {
   const { studentId, deviceId } = req.body;
   if (!studentId || !deviceId) {
     return res.status(400).json({ message: "Thiếu studentId hoặc deviceId" });
   }
-  pendingStudentId = studentId;
-  pendingDeviceId = deviceId;
+
+  // Lưu trạng thái vào Redis với key theo deviceId
+  const registerKey = `fingerprint:register:${deviceId}`;
+  await redisClient.setEx(
+    registerKey,
+    300,
+    JSON.stringify({ studentId, deviceId })
+  ); // Hết hạn sau 5 phút
   res.status(200).json({ message: "Yêu cầu đăng ký đã được gửi" });
 };
 
@@ -25,10 +26,16 @@ exports.checkRequest = async (req, res) => {
   if (!deviceId) {
     return res.status(400).json({ message: "Thiếu deviceId" });
   }
-  if (pendingStudentId && pendingDeviceId === deviceId) {
-    res
-      .status(200)
-      .json({ studentId: pendingStudentId, deviceId: pendingDeviceId });
+
+  const registerKey = `fingerprint:register:${deviceId}`;
+  const data = await redisClient.get(registerKey);
+  if (data) {
+    const { studentId, deviceId: storedDeviceId } = JSON.parse(data);
+    if (deviceId === storedDeviceId) {
+      res.status(200).json({ studentId, deviceId });
+    } else {
+      res.status(200).json({ studentId: null, deviceId });
+    }
   } else {
     res.status(200).json({ studentId: null, deviceId });
   }
@@ -65,8 +72,9 @@ exports.registerFingerprint = async (req, res) => {
   });
   await fingerprint.save();
 
-  pendingStudentId = null;
-  pendingDeviceId = null;
+  // Xóa trạng thái đăng ký khỏi Redis
+  const registerKey = `fingerprint:register:${deviceId}`;
+  await redisClient.del(registerKey);
 
   res.status(200).json({ message: "Đăng ký thành công" });
 };
@@ -112,8 +120,13 @@ exports.deleteFingerprint = async (req, res) => {
     `Deleted ${deleteResult.deletedCount} attendance records for student ${studentId}`
   );
 
-  pendingDeleteFingerprintId = fingerprint.fingerprintId;
-  pendingDeleteDeviceId = deviceId;
+  // Lưu trạng thái xóa vào Redis
+  const deleteKey = `fingerprint:delete:${deviceId}`;
+  await redisClient.setEx(
+    deleteKey,
+    300,
+    JSON.stringify({ fingerprintId: fingerprint.fingerprintId })
+  );
 
   res.status(200).json({
     message: "Yêu cầu xóa vân tay và lịch sử điểm danh đã được gửi",
@@ -127,10 +140,13 @@ exports.checkDelete = async (req, res) => {
   if (!deviceId) {
     return res.status(400).json({ message: "Thiếu deviceId" });
   }
-  if (pendingDeleteFingerprintId && pendingDeleteDeviceId === deviceId) {
-    res.status(200).json({ fingerprintId: pendingDeleteFingerprintId });
-    pendingDeleteFingerprintId = null; // Reset sau khi gửi
-    pendingDeleteDeviceId = null;
+
+  const deleteKey = `fingerprint:delete:${deviceId}`;
+  const data = await redisClient.get(deleteKey);
+  if (data) {
+    const { fingerprintId } = JSON.parse(data);
+    res.status(200).json({ fingerprintId });
+    await redisClient.del(deleteKey); // Xóa sau khi gửi
   } else {
     res.status(200).json({ fingerprintId: 0 });
   }
