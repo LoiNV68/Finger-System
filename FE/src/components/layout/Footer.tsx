@@ -87,7 +87,7 @@ const Footer: React.FC = () => {
                 </div>
 
                 {/* Copyright */}
-                <div className="border-t border-gray-500 mt-8 pt-4 text-center text-gray-200">
+                <div style={{ marginLeft: '20%' }} className="border-t border-gray-500 mt-8 pt-4 text-center text-gray-200">
                     &copy; {new Date().getFullYear()} My Finger System. All rights reserved.
                 </div>
             </div>

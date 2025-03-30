@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Logo from '../../assets/sv_header_login.png';
-import { FaHome, FaInfoCircle, FaServicestack, FaEnvelope, FaUserPlus, FaBars } from 'react-icons/fa';
+import { FaHome, FaInfoCircle, FaServicestack, FaEnvelope, FaUserPlus, FaBars, FaUserAlt } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 const Header: React.FC = () => {
@@ -44,12 +44,12 @@ const Header: React.FC = () => {
 
                     </nav>
 
-                    <div style={{ padding: '15px' }} className="hidden md:flex items-center ml-auto ">
+                    <div style={{ padding: '20px' }} className="hidden md:flex items-center ml-auto ">
                         <Button
                             onClick={handleLogout}
                             className="flex items-center gap-2 bg-white text-[#0268fd] px-6 py-2 rounded-full font-semibold hover:bg-gray-200 transition shadow-md border-2 border-white"
                         >
-                            <FaUserPlus /> Đăng xuất
+                            <FaUserAlt /> Đăng xuất
                         </Button>
                     </div>
 
@@ -77,7 +77,12 @@ const Header: React.FC = () => {
                             <Link to="/device-management" className="flex items-center gap-2 text-[#0268fd] font-medium hover:opacity-80 transition px-3 py-2">
                                 <FaServicestack /> Quản lí thiết bị
                             </Link>
-
+                            <Button
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 bg-blue-300 text-[#0268fd]  font-semibold hover:bg-gray-200 transition shadow-md border-2 border-white"
+                            >
+                                <FaUserAlt /> Đăng xuất
+                            </Button>
                         </div>
                     </div>
                 )}

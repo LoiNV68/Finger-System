@@ -126,7 +126,7 @@ export default function RoomManagement() {
 
     return (
         <div className="p-6 bg-gray-100 min-h-screen">
-            <h1 className="text-5xl font-bold text-center text-gray-900 mb-6">Quản lý Phòng học & Thiết bị</h1>
+            <h1 style={{ margin: "20px 0" }} className="text-5xl font-bold text-center text-gray-900 mb-6">Quản lý Phòng học & Thiết bị</h1>
 
             <div className="flex justify-end mb-4">
                 <Button onClick={handleAddRoom} className="bg-blue-500 text-white">
