@@ -15,7 +15,7 @@ export const StudentTable = ({ filteredData }: StudentTableProps) => {
             <Table>
                 <TableHeader>
                     <TableRow className="bg-gray-200">
-                        <TableHead>ID</TableHead>
+                        <TableHead>STT</TableHead>
                         <TableHead>Tên sinh viên</TableHead>
                         <TableHead>Giới tính</TableHead>
                         <TableHead>Mã sinh viên</TableHead>
@@ -28,9 +28,9 @@ export const StudentTable = ({ filteredData }: StudentTableProps) => {
                 </TableHeader>
                 <TableBody>
                     {filteredData.length > 0 ? (
-                        filteredData.map((student) => (
+                        filteredData.map((student, index) => (
                             <TableRow key={student.id} className="hover:bg-gray-100 transition-colors duration-300">
-                                <TableCell>{student.id}</TableCell>
+                                <TableCell>{index + 1}</TableCell>
                                 <TableCell>{student.name}</TableCell>
                                 <TableCell>{student.gender}</TableCell>
                                 <TableCell>{student.studentId}</TableCell>

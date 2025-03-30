@@ -1,6 +1,7 @@
 const express = require("express");
 const Fingerprint = require("../models/Fingerprint");
 const Student = require("../models/Student");
+const Attendance = require("../models/Attendance"); // Thêm model Attendance
 const router = express.Router();
 
 let pendingStudentId = null;
@@ -88,16 +89,32 @@ router.post("/delete-fingerprint", async (req, res) => {
     return res.status(400).json({ message: "Thiếu studentId hoặc deviceId" });
   }
 
+  // Tìm sinh viên để lấy _id
+  const student = await Student.findOne({ studentId, deviceId });
+  if (!student) {
+    return res.status(404).json({ message: "Không tìm thấy sinh viên" });
+  }
+
+  // Tìm và xóa vân tay
   const fingerprint = await Fingerprint.findOne({ studentId, deviceId });
   if (!fingerprint) {
     return res.status(404).json({ message: "Không tìm thấy vân tay" });
   }
 
   await Fingerprint.deleteOne({ studentId, deviceId });
+
+  // Xóa lịch sử điểm danh liên quan đến sinh viên
+  const deleteResult = await Attendance.deleteMany({ student: student._id });
+  console.log(
+    `Deleted ${deleteResult.deletedCount} attendance records for student ${studentId}`
+  );
+
+  // Lưu thông tin để ESP32 xóa trong AS608
   pendingDeleteFingerprintId = fingerprint.fingerprintId;
   pendingDeleteDeviceId = deviceId;
+
   res.json({
-    message: "Yêu cầu xóa vân tay đã được gửi",
+    message: "Yêu cầu xóa vân tay và lịch sử điểm danh đã được gửi",
     fingerprintId: fingerprint.fingerprintId,
   });
 });

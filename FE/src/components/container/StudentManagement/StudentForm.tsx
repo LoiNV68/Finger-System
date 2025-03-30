@@ -100,7 +100,7 @@ export function StudentForm({ student, onSave, isAdd, rooms, students, onCancel 
             </div>
             <div style={{ marginBottom: "10px" }}>
                 <label htmlFor="studentId">Mã sinh viên</label>
-                <Input value={studentId} onChange={(e) => setStudentId(e.target.value)} />
+                <Input value={studentId} onChange={(e) => setStudentId(e.target.value)} type="number" />
             </div>
             <div style={{ marginBottom: "10px" }}>
                 <label htmlFor="class">Lớp</label>

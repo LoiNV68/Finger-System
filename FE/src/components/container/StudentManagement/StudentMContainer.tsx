@@ -136,8 +136,7 @@ export default function StudentManagement() {
     const handleDeleteStudent = async (student: Student) => {
         try {
             if (!student._id) throw new Error("Không tìm thấy _id của sinh viên");
-            const isConfirmed = confirm("Bạn có chắc muốn xóa sinh viên này?");
-            if (!isConfirmed) return;
+
             await axios.delete(`${API_URL}/delete/${student._id}`);
             setStudents(students.filter((s) => s._id !== student._id));
         } catch (error) {

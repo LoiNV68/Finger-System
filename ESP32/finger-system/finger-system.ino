@@ -47,7 +47,7 @@ int getNextIdFromServer() {
   HTTPClient http;
   String url = String(serverUrl) + "/api/fingerprint/next-id?deviceId=" + String(deviceId);
   http.begin(url);
-  http.setTimeout(5000);
+  http.setTimeout(2000);
   int httpCode = http.GET();
   
   if (httpCode == 200) {
@@ -77,14 +77,14 @@ void loop() {
     WiFi.reconnect();
     delay(2000);
   }
-  delay(500);
+  delay(100);
 }
 
 void checkFingerprintRequest() {
   HTTPClient http;
   String url = String(serverUrl) + "/api/fingerprint/check-request?deviceId=" + String(deviceId);
   http.begin(url);
-  http.setTimeout(5000);
+  http.setTimeout(2000);
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
@@ -216,7 +216,7 @@ void checkDeleteFingerprintRequest() {
   HTTPClient http;
   String url = String(serverUrl) + "/api/fingerprint/check-delete?deviceId=" + String(deviceId);
   http.begin(url);
-  http.setTimeout(5000);
+  http.setTimeout(2000);
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
@@ -248,7 +248,7 @@ void sendFingerprintIdToServer(String studentId, int fingerprintId) {
   String url = String(serverUrl) + "/api/fingerprint/register-fingerprint";
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(5000);
+  http.setTimeout(2000);
 
   DynamicJsonDocument doc(1024);
   doc["studentId"] = studentId;
@@ -318,7 +318,7 @@ String getStudentIdFromFingerprint(int fingerprintId) {
   String url = String(serverUrl) + "/api/fingerprint/verify-fingerprint";
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(5000);
+  http.setTimeout(2000);
 
   DynamicJsonDocument doc(1024);
   doc["fingerprintId"] = fingerprintId;
@@ -341,7 +341,7 @@ void sendAttendanceToServer(String studentId) {
   String url = String(serverUrl) + "/api/attendance/check";
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(5000);
+  http.setTimeout(2000);
 
   DynamicJsonDocument doc(1024);
   doc["studentId"] = studentId;

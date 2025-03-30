@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Summary } from "@/components/container/Dashboard/Summary";
 import { FilterBar } from "@/components/business/FilterBar";
 import { StudentTable } from "@/components/container/Dashboard/StudentTable";
-import { exportToExcel } from "@/components/utils/exportToExcel"; // Import hàm đã tách
+import { exportToExcel } from "@/components/utils/exportToExcel";
 
 const API_ATTENDANCE = process.env.API_ATTENDANCE || "http://localhost:5000/api/attendance";
 const API_STUDENT = process.env.API_STUDENT || "http://localhost:5000/api/students";
@@ -42,6 +42,7 @@ export default function Dashboard() {
     const [students, setStudents] = useState<Student[]>([]);
     const [filteredData, setFilteredData] = useState<Student[]>([]);
     const [registeredStudents, setRegisteredStudents] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true); // Thêm trạng thái loading
 
     const fetchAttendanceData = async () => {
         try {
@@ -64,6 +65,8 @@ export default function Dashboard() {
             setFilteredData(mappedData);
         } catch (error) {
             console.error("Lỗi khi lấy dữ liệu điểm danh:", error);
+        } finally {
+            setIsLoading(false); // Tắt loading sau khi tải xong
         }
     };
 
@@ -126,9 +129,9 @@ export default function Dashboard() {
         setFilteredData(filtered);
     }, [filters, students]);
 
-    // Sử dụng hàm exportToExcel đã tách
     const handleExportToExcel = () => {
         const headers = [
+            "STT",
             "Tên sinh viên",
             "Giới tính",
             "Mã sinh viên",
@@ -139,7 +142,8 @@ export default function Dashboard() {
             "Viện",
         ];
 
-        const data = filteredData.map((student) => [
+        const data = filteredData.map((student, index) => [
+            index + 1,
             student.name,
             student.gender,
             student.studentId,
@@ -150,7 +154,6 @@ export default function Dashboard() {
             student.department,
         ]);
 
-        // Truyền tên file cơ bản, hàm exportToExcel sẽ tự động thêm ngày tháng năm
         exportToExcel(headers, data, "Danh sách điểm danh", "Danh_sach_diem_danh");
     };
 
@@ -178,7 +181,11 @@ export default function Dashboard() {
                     </Button>
                 </div>
                 <FilterBar filters={filters} handleFilterChange={handleFilterChange} resetFilters={resetFilters} />
-                <StudentTable filteredData={filteredData} />
+                {isLoading ? (
+                    <div className="text-center py-4">Đang tải dữ liệu...</div>
+                ) : (
+                    <StudentTable filteredData={filteredData} />
+                )}
             </div>
         </div>
     );
