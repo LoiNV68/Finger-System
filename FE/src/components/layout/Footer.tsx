@@ -12,7 +12,8 @@ const Footer: React.FC = () => {
                     <div>
                         <h3 className="text-lg font-bold mb-4">About Us</h3>
                         <p className="text-gray-200">
-                            Một team kì cục gồm 3 thành viên. Gồm Nguyễn Văn Lợi, Nguyễn Hải Nam, Phạm Thanh Tươi, và thành viên dự bị Nguyễn Anh Dũng
+                            Một team kì cục gồm 3 thành viên. Gồm <span className='font-bold'>Nguyễn Văn Lợi</span>, <span className='font-bold'>Nguyễn Hải Nam</span>, <span className='font-bold'>Phạm Thanh Tươi</span>,
+                            và thành viên dự bị <span className='font-bold'>Nguyễn Anh Dũng</span>
                         </p>
                     </div>
 
@@ -72,7 +73,7 @@ const Footer: React.FC = () => {
                                     <FaFacebook />
                                 </a>
                             </div>
-                            <div>
+                            <div style={{ margin: "0 10px" }}>
                                 <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:opacity-80">
                                     <FaX />
                                 </a>

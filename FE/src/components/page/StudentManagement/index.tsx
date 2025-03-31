@@ -1,4 +1,4 @@
-import { StudentManagementContainer } from '@/components/container/StudentManagement'
+import { StudentManagementContainer } from '@/components/container/student-management'
 const StudentManagement = () => {
     return (
         <StudentManagementContainer />

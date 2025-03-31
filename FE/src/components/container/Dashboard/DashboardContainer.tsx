@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Summary } from "@/components/container/Dashboard/Summary";
+import { Summary } from "@/components/container/dashboard/Summary";
 import { FilterBar } from "@/components/business/FilterBar";
-import { StudentTable } from "@/components/container/Dashboard/StudentTable";
+import { StudentTable } from "@/components/container/dashboard/StudentTable";
 import { exportToExcel } from "@/components/utils/exportToExcel";
 
 const API_ATTENDANCE = process.env.API_ATTENDANCE || "http://localhost:5000/api/attendance";
@@ -171,7 +171,7 @@ export default function Dashboard() {
     return (
         <div style={{ margin: "5px" }} className="p-6">
             <h1 style={{ margin: "20px 0" }} className="text-5xl font-bold text-center text-gray-900 mb-6">
-                Dashboard
+                Thống kê và báo cáo
             </h1>
             <Summary />
             <div
