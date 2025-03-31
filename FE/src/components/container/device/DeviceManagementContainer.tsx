@@ -129,7 +129,8 @@ export default function RoomManagement() {
             <h1 style={{ margin: "20px 0" }} className="text-5xl font-bold text-center text-gray-900 mb-6">Quản lý Phòng học & Thiết bị</h1>
 
             <div className="flex justify-end mb-4">
-                <Button onClick={handleAddRoom} className="bg-blue-500 text-white">
+                <Button onClick={handleAddRoom} style={{ padding: "10px", marginBottom: "20px", marginRight: '5px' }}
+                    className="bg-blue-500 text-white">
                     <Plus className="w-4 h-4 mr-2" /> Thêm phòng
                 </Button>
             </div>
@@ -143,7 +144,7 @@ export default function RoomManagement() {
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent>
-                    <DialogHeader style={{padding: '10px'}}>
+                    <DialogHeader style={{ padding: '10px' }}>
                         <DialogTitle>{isAdd ? "Thêm mới" : "Chỉnh sửa"} Phòng học</DialogTitle>
                         <DialogDescription>
                             Nhập thông tin phòng học và nhấn lưu để cập nhật hệ thống.
